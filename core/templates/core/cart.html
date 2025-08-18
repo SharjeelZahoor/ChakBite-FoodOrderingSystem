@@ -1,0 +1,174 @@
+{% extends 'core/base.html' %}
+{% block title %}ChakBites - Your Cart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">Your Shopping Cart</h1>
+    
+    {% if cart.items.exists %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Cart Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Pizza</th>
+                                    <th>Size</th>
+                                    <th>Toppings</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart.items.all %}
+                                <tr>
+                                    <td>{{ item.pizza.name }}</td>
+                                    <td>{{ item.get_size_display }}</td>
+                                    <td>
+                                        {% for topping in item.toppings.all %}
+                                        {{ topping.name }}{% if not forloop.last %}, {% endif %}
+                                        {% empty %}
+                                        None
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        <div class="input-group input-group-sm" style="width: 120px;">
+                                            <button class="btn btn-outline-danger decrease-qty" data-item-id="{{ item.id }}">-</button>
+                                            <input type="text" class="form-control text-center item-quantity" data-item-id="{{ item.id }}" value="{{ item.quantity }}" readonly>
+                                            <button class="btn btn-outline-danger increase-qty" data-item-id="{{ item.id }}">+</button>
+                                        </div>
+                                    </td>
+                                    <td class="item-price" data-item-id="{{ item.id }}">Rs. {{ item.get_price }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger remove-item" data-item-id="{{ item.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">Rs. 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Delivery Fee:</span>
+                        <span id="delivery-fee">Rs. 50</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5>Total:</h5>
+                        <h5 id="total">Rs. 0</h5>
+                    </div>
+                    <a href="{% url 'checkout' %}" class="btn btn-danger w-100">Proceed to Checkout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-cart-x fs-1 text-danger"></i>
+        <h3 class="mt-3">Your cart is empty</h3>
+        <p class="text-muted">Add some delicious pizzas to your cart!</p>
+        <a href="{% url 'menu' %}" class="btn btn-danger">Browse Menu</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateCartSummary() {
+        let subtotal = 0;
+        document.querySelectorAll('.item-price').forEach(priceElement => {
+            subtotal += parseFloat(priceElement.textContent.replace('Rs. ', ''));
+        });
+        
+        const deliveryFee = 50;
+        const total = subtotal + deliveryFee;
+        
+        document.getElementById('subtotal').textContent = 'Rs. ' + subtotal.toFixed(2);
+        document.getElementById('delivery-fee').textContent = 'Rs. ' + deliveryFee.toFixed(2);
+        document.getElementById('total').textContent = 'Rs. ' + total.toFixed(2);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartSummary();
+        
+        // Remove item
+        document.querySelectorAll('.remove-item').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                
+                fetch('/api/cart/remove_item/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                    },
+                    body: JSON.stringify({ item_id: itemId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Unknown error'));
+                    }
+                });
+            });
+        });
+        
+        // Update quantity
+        document.querySelectorAll('.decrease-qty, .increase-qty').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                const quantityInput = document.querySelector(`.item-quantity[data-item-id="${itemId}"]`);
+                let quantity = parseInt(quantityInput.value);
+                
+                if (this.classList.contains('decrease-qty')) {
+                    quantity = Math.max(1, quantity - 1);
+                } else {
+                    quantity += 1;
+                }
+                
+                fetch('/api/cart/update_item_quantity/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                    },
+                    body: JSON.stringify({ item_id: itemId, quantity: quantity })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.price) {
+                        quantityInput.value = quantity;
+                        document.querySelector(`.item-price[data-item-id="${itemId}"]`).textContent = 'Rs. ' + data.price.toFixed(2);
+                        updateCartSummary();
+                    } else {
+                        alert('Error: ' + (data.error || 'Unknown error'));
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
