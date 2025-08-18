@@ -1,0 +1,320 @@
+/*
+  ChakBites Menu Page Styles
+  Designed with a warm, appetizing color scheme and smooth animations
+*/
+
+/* Menu Container */
+.pizza-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Pizza Cards */
+.pizza-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(214, 48, 49, 0.1);
+}
+
+.pizza-card:hover {
+  box-shadow: 0 8px 25px rgba(214, 48, 49, 0.25);
+  transform: translateY(-5px);
+}
+
+/* Pizza Image */
+.pizza-image-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.pizza-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.pizza-card:hover .pizza-image {
+  transform: scale(1.08);
+}
+
+.pizza-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #fdcb6e;
+  color: #2d3436;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+/* Pizza Card Body */
+.card-body {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pizza Name */
+.pizza-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #d63031;
+  margin-bottom: 12px;
+  font-family: 'Playfair Display', serif;
+}
+
+/* Pizza Description */
+.pizza-description-container {
+  margin-bottom: 15px;
+  flex-grow: 1;
+}
+
+.pizza-description {
+  color: #2d3436;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.show-more-link {
+  color: #d63031;
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.show-more-link:hover {
+  color: #c0392b;
+  text-decoration: underline;
+}
+
+/* Pizza Pricing */
+.pizza-pricing {
+  margin-bottom: 15px;
+  border-top: 1px solid rgba(214, 48, 49, 0.15);
+  padding-top: 15px;
+}
+
+.price-option {
+  font-weight: 600;
+  color: #d63031;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Toppings Section */
+.toppings-title {
+  color: #d63031;
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.toppings-container {
+  max-height: 120px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.topping-item {
+  margin-bottom: 8px;
+}
+
+.topping-item label {
+  font-size: 0.9rem;
+  color: #2d3436;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Add to Cart Button */
+.add-to-cart-btn {
+  background: #f8d7da;
+  color: #d63031;
+  border: 1px solid #f5c6cb;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.add-to-cart-btn:hover {
+  background: #d63031;
+  color: white;
+  border-color: #d63031;
+  box-shadow: 0 4px 12px rgba(214, 48, 49, 0.4);
+  transform: translateY(-2px);
+}
+
+/* More Pizzas Button */
+#more-pizzas-btn {
+  background: white;
+  color: #d63031;
+  border: 2px solid #d63031;
+  font-weight: 600;
+  padding: 10px 25px;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+#more-pizzas-btn:hover {
+  background: #d63031;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(214, 48, 49, 0.3);
+}
+
+/* Pizza Detail Modal */
+.pizza-detail-title {
+  color: #d63031;
+  font-family: 'Playfair Display', serif;
+}
+
+.pizza-detail-image {
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.pizza-detail-description {
+  color: #2d3436;
+  line-height: 1.6;
+  font-family: 'Poppins', sans-serif;
+}
+
+.pizza-detail-pricing h6 {
+  color: #d63031;
+  font-family: 'Poppins', sans-serif;
+}
+
+.toppings-detail-container {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.add-to-cart-detail-btn {
+  background: #d63031;
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.add-to-cart-detail-btn:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(214, 48, 49, 0.4);
+}
+
+/* Search Section */
+.input-group {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.input-group .form-control {
+  border: none;
+  border-radius: 30px 0 0 30px;
+  padding: 12px 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.input-group .btn {
+  border: none;
+  border-radius: 0 30px 30px 0;
+  padding: 0 25px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Hidden pizzas */
+.hidden-pizza {
+  display: none;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .pizza-image-container {
+    height: 180px;
+  }
+  
+  .pizza-name {
+    font-size: 1.2rem;
+  }
+  
+  .pizza-description {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .pizza-image-container {
+    height: 160px;
+  }
+  
+  .card-body {
+    padding: 15px;
+  }
+  
+  .pizza-name {
+    font-size: 1.1rem;
+  }
+  
+  .pizza-description {
+    font-size: 0.85rem;
+  }
+  
+  .price-option {
+    font-size: 0.85rem;
+  }
+  
+  .toppings-container {
+    max-height: 100px;
+  }
+}
+
+@media (max-width: 576px) {
+  .pizza-image-container {
+    height: 140px;
+  }
+  
+  .pizza-card {
+    margin-bottom: 20px;
+  }
+  
+  .pizza-name {
+    font-size: 1rem;
+  }
+  
+  .pizza-description {
+    font-size: 0.8rem;
+  }
+  
+  .price-option {
+    font-size: 0.8rem;
+  }
+  
+  .add-to-cart-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  
+  #more-pizzas-btn {
+    padding: 8px 20px;
+    font-size: 0.9rem;
+  }
+}

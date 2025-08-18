@@ -1,6 +1,9 @@
 {% extends 'core/base.html' %}
+{% load static %}
 {% block title %}ChakBites - Menu{% endblock %}
-
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/menu.css' %}">
+{% endblock %}
 {% block content %}
 <div class="container my-5">
     <h1 class="text-center mb-4">Our Pizza Menu</h1>
@@ -14,45 +17,105 @@
         </div>
     </div>
     
-    <div class="row">
-        {% for pizza in pizzas %}
-        <div class="col-md-4 mb-4 pizza-item">
-            <div class="card pizza-card h-100">
-                <img src="{{ pizza.image.url }}" class="card-img-top" alt="{{ pizza.name }}">
-                <div class="card-body">
-                    <h5 class="card-title">{{ pizza.name }}</h5>
-                    <p class="card-text">{{ pizza.description }}</p>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <span>Small: Rs. {{ pizza.small_price }}</span>
-                            <span>Medium: Rs. {{ pizza.medium_price }}</span>
-                            <span>Large: Rs. {{ pizza.large_price }}</span>
-                        </div>
+    <div class="pizza-container">
+        <div class="row" id="pizza-row">
+            {% for pizza in pizzas %}
+            <div class="col-md-4 mb-4 pizza-item {% if forloop.counter > 6 %}hidden-pizza{% endif %}">
+                <div class="card pizza-card h-100">
+                    <div class="pizza-image-container">
+                        <img src="{{ pizza.image.url }}" class="card-img-top pizza-image" alt="{{ pizza.name }}">
+                        {% if pizza.is_bestseller %}
+                        <div class="pizza-badge">Bestseller</div>
+                        {% endif %}
                     </div>
-                    <div class="mb-3">
-                        <h6>Toppings:</h6>
-                        <div class="form-check">
-                            {% for topping in toppings %}
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="{{ topping.id }}" id="topping-{{ topping.id }}">
-                                <label class="form-check-label" for="topping-{{ topping.id }}">
-                                    {{ topping.name }} (Rs. {{ topping.price }})
-                                </label>
+                    <div class="card-body">
+                        <h5 class="card-title pizza-name">{{ pizza.name }}</h5>
+                        <div class="pizza-description-container">
+                            <p class="card-text pizza-description">
+                                {{ pizza.description|truncatewords:20 }}
+                            </p>
+                            {% if pizza.description|wordcount > 20 %}
+                            <a href="#" class="show-more-link" data-pizza-id="{{ pizza.id }}">Show more</a>
+                            {% endif %}
+                        </div>
+                        <div class="pizza-pricing mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="price-option">S: Rs. {{ pizza.small_price }}</span>
+                                <span class="price-option">M: Rs. {{ pizza.medium_price }}</span>
+                                <span class="price-option">L: Rs. {{ pizza.large_price }}</span>
                             </div>
-                            {% endfor %}
                         </div>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-danger add-to-cart-btn" 
-                                data-pizza-id="{{ pizza.id }}"
-                                data-pizza-name="{{ pizza.name }}">
-                            Add to Cart
-                        </button>
+                        <div class="mb-3">
+                            <h6 class="toppings-title">Toppings:</h6>
+                            <div class="toppings-container">
+                                {% for topping in toppings %}
+                                <div class="form-check topping-item">
+                                    <input class="form-check-input" type="checkbox" value="{{ topping.id }}" id="topping-{{ topping.id }}">
+                                    <label class="form-check-label" for="topping-{{ topping.id }}">
+                                        {{ topping.name }} (Rs. {{ topping.price }})
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-danger add-to-cart-btn" 
+                                    data-pizza-id="{{ pizza.id }}"
+                                    data-pizza-name="{{ pizza.name }}">
+                                Add to Cart
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+        
+        {% if pizzas|length > 6 %}
+        <div class="text-center mt-4">
+            <button id="more-pizzas-btn" class="btn btn-outline-danger">More Pizzas</button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Pizza Detail Modal -->
+<div class="modal fade" id="pizzaDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title pizza-detail-title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <img src="" class="img-fluid pizza-detail-image" alt="">
+                    </div>
+                    <div class="col-md-6">
+                        <p class="pizza-detail-description"></p>
+                        <div class="pizza-detail-pricing mb-3">
+                            <h6>Prices:</h6>
+                            <div class="d-flex justify-content-between">
+                                <span>Small: Rs. <span class="detail-small-price"></span></span>
+                                <span>Medium: Rs. <span class="detail-medium-price"></span></span>
+                                <span>Large: Rs. <span class="detail-large-price"></span></span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Toppings:</h6>
+                            <div class="toppings-detail-container">
+                                <!-- Toppings will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger add-to-cart-detail-btn">Add to Cart</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -99,12 +162,67 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
-
 {% block extra_js %}
 <script>
     let selectedPizzaId = null;
+    
+    // Show more pizzas functionality
+    document.getElementById('more-pizzas-btn')?.addEventListener('click', function() {
+        const hiddenPizzas = document.querySelectorAll('.hidden-pizza');
+        hiddenPizzas.forEach(pizza => {
+            pizza.classList.remove('hidden-pizza');
+        });
+        this.style.display = 'none';
+    });
+    
+    // Show more details for a pizza
+    document.querySelectorAll('.show-more-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const pizzaId = this.getAttribute('data-pizza-id');
+            const pizzaCard = this.closest('.pizza-card');
+            const pizzaName = pizzaCard.querySelector('.pizza-name').textContent;
+            const pizzaImage = pizzaCard.querySelector('.pizza-image').src;
+            const pizzaDescription = pizzaCard.querySelector('.pizza-description').getAttribute('data-full-description') || 
+                                    pizzaCard.querySelector('.pizza-description').textContent;
+            const smallPrice = pizzaCard.querySelector('.price-option:nth-child(1)').textContent.split(': ')[1];
+            const mediumPrice = pizzaCard.querySelector('.price-option:nth-child(2)').textContent.split(': ')[1];
+            const largePrice = pizzaCard.querySelector('.price-option:nth-child(3)').textContent.split(': ')[1];
+            
+            // Populate modal with pizza details
+            document.querySelector('.pizza-detail-title').textContent = pizzaName;
+            document.querySelector('.pizza-detail-image').src = pizzaImage;
+            document.querySelector('.pizza-detail-description').textContent = pizzaDescription;
+            document.querySelector('.detail-small-price').textContent = smallPrice;
+            document.querySelector('.detail-medium-price').textContent = mediumPrice;
+            document.querySelector('.detail-large-price').textContent = largePrice;
+            
+            // Copy toppings to modal
+            const toppingsContainer = document.querySelector('.toppings-detail-container');
+            toppingsContainer.innerHTML = '';
+            const originalToppings = pizzaCard.querySelectorAll('.topping-item');
+            originalToppings.forEach(topping => {
+                const clone = topping.cloneNode(true);
+                toppingsContainer.appendChild(clone);
+            });
+            
+            // Set pizza ID for add to cart button
+            document.querySelector('.add-to-cart-detail-btn').setAttribute('data-pizza-id', pizzaId);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('pizzaDetailModal'));
+            modal.show();
+        });
+    });
+    
+    // Add to cart from detail modal
+    document.querySelector('.add-to-cart-detail-btn')?.addEventListener('click', function() {
+        selectedPizzaId = this.getAttribute('data-pizza-id');
+        bootstrap.Modal.getInstance(document.getElementById('pizzaDetailModal')).hide();
+        const modal = new bootstrap.Modal(document.getElementById('sizeModal'));
+        modal.show();
+    });
     
     document.querySelectorAll('.add-to-cart-btn').forEach(button => {
         button.addEventListener('click', function() {
@@ -142,7 +260,28 @@
         .then(response => response.json())
         .then(data => {
             if (data.id) {
-                alert('Item added to cart!');
+                // Show success notification
+                const notification = document.createElement('div');
+                notification.className = 'position-fixed top-0 end-0 p-3';
+                notification.style.zIndex = '11';
+                notification.innerHTML = `
+                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header">
+                            <strong class="me-auto">ChakBites</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            Pizza added to cart!
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                
+                // Remove notification after 3 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+                
                 updateCartCount();
                 bootstrap.Modal.getInstance(document.getElementById('sizeModal')).hide();
             } else {
