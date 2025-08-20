@@ -1,119 +1,130 @@
 {% extends 'core/base.html' %}
-{% block title %}ChakBites - Register{% endblock %}
-
+{% block title %}Register - ChakBites{% endblock %}
 {% block content %}
-<div class="container my-5">
+<div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0 text-center">Create an Account</h4>
+            <div class="card shadow animate-fadeInUp">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Register</h4>
                 </div>
                 <div class="card-body">
-                    <form id="register-form">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="first_name" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="first_name" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="last_name" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="last_name" required>
-                            </div>
-                        </div>
-                        
+                    <form id="registerForm">
+                        {% csrf_token %}
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" id="username" required>
                         </div>
-                        
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" required>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="phone" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="address" class="form-label">Address</label>
-                            <textarea class="form-control" id="address" rows="3" required></textarea>
-                        </div>
-                        
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" required>
                         </div>
-                        
                         <div class="mb-3">
-                            <label for="confirm_password" class="form-label">Confirm Password</label>
-                            <input type="password" class="form-control" id="confirm_password" required>
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" required>
                         </div>
-                        
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="text" class="form-control" id="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" required></textarea>
+                        </div>
                         <div class="d-grid">
-                            <button type="button" class="btn btn-danger" id="register-btn">Register</button>
-                        </div>
-                        
-                        <div class="text-center mt-3">
-                            <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+                            <button type="submit" class="btn btn-primary">Register</button>
                         </div>
                     </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-0">Already have an account? <a href="{% url 'login' %}">Login</a></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-    document.getElementById('register-btn').addEventListener('click', function() {
-        const firstName = document.getElementById('first_name').value;
-        const lastName = document.getElementById('last_name').value;
-        const username = document.getElementById('username').value;
-        const email = document.getElementById('email').value;
-        const phone = document.getElementById('phone').value;
-        const address = document.getElementById('address').value;
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirm_password').value;
-        
-        if (password !== confirmPassword) {
-            alert('Passwords do not match!');
-            return;
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const first_name = document.getElementById('first_name').value;
+    const last_name = document.getElementById('last_name').value;
+    const phone = document.getElementById('phone').value;
+    const address = document.getElementById('address').value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Show loading state
+    const submitButton = document.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registering...';
+    
+    fetch('/api/register/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            username: username,
+            email: email,
+            password: password,
+            first_name: first_name,
+            last_name: last_name,
+            phone: phone,
+            address: address
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.user) {
+            // Store JWT tokens
+            localStorage.setItem('access_token', data.access);
+            localStorage.setItem('refresh_token', data.refresh);
+            
+            // Redirect to home page
+            window.location.href = '{% url "home" %}';
+        } else {
+            // Show error message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                ${data.error || 'Registration failed. Please try again.'}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.querySelector('.card-body').prepend(alertDiv);
+            
+            // Reset button
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            An error occurred. Please try again.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.querySelector('.card-body').prepend(alertDiv);
         
-        fetch('/api/register/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                first_name: firstName,
-                last_name: lastName,
-                username: username,
-                email: email,
-                phone: phone,
-                address: address,
-                password: password
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.access) {
-                localStorage.setItem('access_token', data.access);
-                localStorage.setItem('refresh_token', data.refresh);
-                alert('Registration successful! You are now logged in.');
-                window.location.href = '/';
-            } else {
-                alert('Error: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again.');
-        });
+        // Reset button
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
     });
+});
 </script>
 {% endblock %}

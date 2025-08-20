@@ -1,72 +1,100 @@
 {% extends 'core/base.html' %}
-{% block title %}ChakBites - Login{% endblock %}
-
+{% block title %}Login - ChakBites{% endblock %}
 {% block content %}
-<div class="container my-5">
+<div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0 text-center">Login to Your Account</h4>
+        <div class="col-md-6">
+            <div class="card shadow animate-fadeInUp">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Login</h4>
                 </div>
                 <div class="card-body">
-                    <form id="login-form">
+                    <form id="loginForm">
+                        {% csrf_token %}
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" id="username" required>
                         </div>
-                        
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" required>
                         </div>
-                        
                         <div class="d-grid">
-                            <button type="button" class="btn btn-danger" id="login-btn">Login</button>
-                        </div>
-                        
-                        <div class="text-center mt-3">
-                            <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+                            <button type="submit" class="btn btn-primary">Login</button>
                         </div>
                     </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-0">Don't have an account? <a href="{% url 'register' %}">Register</a></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-    document.getElementById('login-btn').addEventListener('click', function() {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Show loading state
+    const submitButton = document.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging in...';
+    
+    fetch('/api/login/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            username: username,
+            password: password
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Store JWT tokens
+            localStorage.setItem('access_token', data.access);
+            localStorage.setItem('refresh_token', data.refresh);
+            
+            // Redirect to home page
+            window.location.href = '{% url "home" %}';
+        } else {
+            // Show error message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                ${data.error || 'Login failed. Please check your credentials.'}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.querySelector('.card-body').prepend(alertDiv);
+            
+            // Reset button
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            An error occurred. Please try again.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.querySelector('.card-body').prepend(alertDiv);
         
-        fetch('/api/login/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: username,
-                password: password
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.access) {
-                localStorage.setItem('access_token', data.access);
-                localStorage.setItem('refresh_token', data.refresh);
-                alert('Login successful!');
-                window.location.href = '/';
-            } else {
-                alert('Error: ' + (data.error || 'Invalid credentials'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again.');
-        });
+        // Reset button
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
     });
+});
 </script>
 {% endblock %}

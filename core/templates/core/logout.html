@@ -1,0 +1,62 @@
+{% extends 'core/base.html' %}
+{% block title %}Logout - ChakBites{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow animate-fadeInUp">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Logout</h4>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to logout?</p>
+                    <div class="d-grid">
+                        <button id="logoutButton" class="btn btn-primary">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('logoutButton').addEventListener('click', function() {
+    const accessToken = localStorage.getItem('access_token');
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    // Show loading state
+    const logoutButton = document.getElementById('logoutButton');
+    const originalText = logoutButton.textContent;
+    logoutButton.disabled = true;
+    logoutButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging out...';
+    
+    fetch('/api/logout/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+            refresh_token: refreshToken
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Clear tokens regardless of response
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        
+        // Redirect to home page
+        window.location.href = '{% url "home" %}';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        
+        // Even if there's an error, clear tokens and redirect
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '{% url "home" %}';
+    });
+});
+</script>
+{% endblock %}

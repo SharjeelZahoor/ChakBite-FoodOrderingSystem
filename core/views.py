@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.http import JsonResponse
 from .models import UserProfile, Pizza, Topping, Cart, CartItem, Order, OrderItem
 from .serializers import (
     UserSerializer, UserProfileSerializer, PizzaSerializer, ToppingSerializer,
@@ -15,6 +16,16 @@ from .serializers import (
 )
 from django.db import models
 from django.db.models import Q
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
+# Context processor for cart count
+def cart_count(request):
+    count = 0
+    if request.user.is_authenticated:
+        cart, created = Cart.objects.get_or_create(user=request.user, active=True)
+        count = cart.items.count()
+    return {'cart_count': count}
 
 # Web Views
 def home(request):
@@ -62,41 +73,23 @@ def order_detail(request, order_id):
 def profile(request):
     return render(request, 'core/profile.html')
 
+# Login page view - just renders the template
 def login_view(request):
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect("home")
-        else:
-            messages.error(request, "Invalid username or password")
     return render(request, "core/login.html")
 
+# Register page view - just renders the template
 def register_view(request):
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        email = request.POST.get("email")
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists.")
-            return redirect("register")
-        user = User.objects.create_user(username=username, password=password, email=email)
-        user.save()
-        messages.success(request, "Account created successfully! Please login.")
-        return redirect("login")
     return render(request, "core/register.html")
 
-@login_required
+# Logout page view - just renders the template
 def logout_view(request):
-    logout(request)
-    messages.success(request, 'You have been logged out successfully')
-    return redirect('home')
+    return render(request, "core/logout.html")
 
 # API Views
+@method_decorator(csrf_exempt, name='dispatch')
 class UserRegistrationView(APIView):
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []  # No authentication required for registration
     
     def post(self, request):
         username = request.data.get('username')
@@ -133,9 +126,22 @@ class UserRegistrationView(APIView):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }, status=status.HTTP_201_CREATED)
+        
+        
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from rest_framework import status, permissions
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import UserSerializer
 
+@method_decorator(csrf_exempt, name='dispatch')
 class UserLoginView(APIView):
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []  # No authentication required for login
     
     def post(self, request):
         username = request.data.get('username')
@@ -146,13 +152,37 @@ class UserLoginView(APIView):
         if user:
             refresh = RefreshToken.for_user(user)
             return Response({
+                'success': True,
                 'user': UserSerializer(user).data,
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             }, status=status.HTTP_200_OK)
         
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({
+            'success': False, 
+            'error': 'Invalid credentials'
+        }, status=status.HTTP_401_UNAUTHORIZED)
+        
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 
+class UserLogoutView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            # Blacklist the refresh token
+            refresh_token = request.data.get('refresh_token')
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            
+            return Response({'success': True}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
 class PizzaViewSet(viewsets.ModelViewSet):
     queryset = Pizza.objects.all()
     serializer_class = PizzaSerializer
@@ -321,6 +351,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         serializer = OrderSerializer(order)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_cart_count(request):
+    cart, created = Cart.objects.get_or_create(user=request.user, active=True)
+    count = cart.items.count()
+    return Response({'count': count})
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])

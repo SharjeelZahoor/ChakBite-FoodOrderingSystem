@@ -25,6 +25,8 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/register/', views.UserRegistrationView.as_view(), name='api_register'),
     path('api/login/', views.UserLoginView.as_view(), name='api_login'),
+    path('api/logout/', views.UserLogoutView.as_view(), name='api_logout'),
+    path('api/cart/count/', views.get_cart_count, name='get_cart_count'),
     path('api/update_profile/', views.update_profile, name='api_update_profile'),
     path('api/change_password/', views.change_password, name='api_change_password'),
 ]
