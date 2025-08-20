@@ -13,6 +13,8 @@ from .serializers import (
     UserSerializer, UserProfileSerializer, PizzaSerializer, ToppingSerializer,
     CartSerializer, CartItemSerializer, OrderSerializer, OrderItemSerializer
 )
+from django.db import models
+from django.db.models import Q
 
 # Web Views
 def home(request):
@@ -20,9 +22,18 @@ def home(request):
     return render(request, 'core/home.html', {'featured_pizzas': featured_pizzas})
 
 def menu(request):
+    search_query = request.GET.get('search', '')
     pizzas = Pizza.objects.filter(available=True)
     toppings = Topping.objects.filter(available=True)
-    return render(request, 'core/menu.html', {'pizzas': pizzas, 'toppings': toppings})
+    
+    # Filter pizzas based on search query
+    if search_query:
+        pizzas = pizzas.filter(
+            Q(name__icontains=search_query) | 
+            Q(description__icontains=search_query)
+        )
+    
+    return render(request, 'core/menu.html', {'pizzas': pizzas, 'toppings': toppings, 'search_query': search_query})
 
 @login_required
 def cart(request):
@@ -51,11 +62,31 @@ def order_detail(request, order_id):
 def profile(request):
     return render(request, 'core/profile.html')
 
-def register_view(request):
-    return render(request, 'core/register.html')
-
 def login_view(request):
-    return render(request, 'core/login.html')
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect("home")
+        else:
+            messages.error(request, "Invalid username or password")
+    return render(request, "core/login.html")
+
+def register_view(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        email = request.POST.get("email")
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists.")
+            return redirect("register")
+        user = User.objects.create_user(username=username, password=password, email=email)
+        user.save()
+        messages.success(request, "Account created successfully! Please login.")
+        return redirect("login")
+    return render(request, "core/register.html")
 
 @login_required
 def logout_view(request):

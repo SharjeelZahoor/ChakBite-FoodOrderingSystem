@@ -8,14 +8,16 @@
 <div class="container my-5">
     <h1 class="text-center mb-4">Our Pizza Menu</h1>
     
-    <div class="row mb-4">
-        <div class="col-md-6 offset-md-3">
+  <div class="row mb-4">
+    <div class="col-md-8 offset-md-2">
+        <form id="search-form" method="GET" action="{% url 'menu' %}">
             <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search pizzas..." id="search-input">
-                <button class="btn btn-danger" type="button">Search</button>
+                <input type="text" class="form-control" placeholder="Search pizzas..." id="search-input" name="search" value="{{ request.GET.search|default:'' }}">
+                <button class="btn btn-danger" type="submit">Search</button>
             </div>
-        </div>
+        </form>
     </div>
+</div>
     
     <div class="pizza-container">
         <div class="row" id="pizza-row">
